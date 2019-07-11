@@ -1,16 +1,148 @@
-<!DOCTYPE html> 
-<html> 
-<body> 
+<!doctype html>
+<html manifest="manifest.aspx">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>AppCache Test Page</title>
+<style>
 
-<video width="400" controls>
-  <source src="VID_20170703_105519.mp4" type="video/mp4">
-  Your browser does not support HTML5 video.
-</video>
+body 
+{
+	font-family:"Courier New", Courier, monospace;
+}
+.auto-style1 {
+	color: #4DC339;
+}
+.auto-style2 {
+	color: #C33939;
+}
+.auto-style4 {
+	color: #F5F33D;
+}
+.auto-style3 {
+	color: #ECEA3F;
+}
+</style>
+<script type="text/javascript">
+var iStartAt = new Date().valueOf();
+function getACStatus()
+{
+try{
+	var sCacheStatus = "Not supported";
+	if (window.applicationCache) 
+	{
+	   var oAppCache = window.applicationCache;
+	   switch ( oAppCache.status ) 
+	   {
+	      case oAppCache.UNCACHED : 
+	         sCacheStatus = "Not cached"; 
+	         break;
+	      case oAppCache.IDLE : 
+	         sCacheStatus = "Idle"; 
+	         break;
+	      case oAppCache.CHECKING : 
+	         sCacheStatus = "Checking"; 
+	         break;
+	      case oAppCache.DOWNLOADING : 
+	         sCacheStatus = "Downloading"; 
+	         break;
+	      case oAppCache.UPDATEREADY : 
+	         sCacheStatus = "Update ready"; 
+	         break;
+	      case oAppCache.OBSOLETE : 
+	         sCacheStatus = "Obsolete"; 
+	         break;
+	      default : 
+	        sCacheStatus = "Unexpected Status ( " + 
+	                       oAppCache.status.toString() + ")";
+	        break;
+	   }
+	}
+	return sCacheStatus;
+	}
+	catch (e)
+	{
+		alert(e);
+	}
+}
 
+function doLoaded()
+{
+	try{
+	var sStatus = getACStatus();
+	LogString("Checked status: Result was " + sStatus);
+	document.getElementById("spanACStatus").innerText = sStatus;
+	}
+	catch (e) { alert(e); }
+}
+
+function updateCache()
+{
+	LogString("Calling applicationCache.update()...");
+	var appCache = window.applicationCache;
+	appCache.update();
+}
+
+
+function addRandomImage()
+{
+    var img = new Image();
+    img.src = ("generic.aspx?" + new Date().valueOf());
+    img.height= 50;
+    img.width = 300;
+    img.style = "border:5px solid black";
+	document.body.appendChild(img)
+}
+
+
+function LogString(s)
+{
+	var sElement = document.getElementById("spanEvents");
+	sElement.innerHTML = (sElement.innerHTML + "<br />" + (new Date().valueOf() - iStartAt) + ": " + s);
+}
+
+window.addEventListener("load", doLoaded, false);
+
+function logACEvent(e)
+{
+	LogString("Status Change: " + getACStatus());
+}
+
+var appCache = window.applicationCache;
+appCache.addEventListener('error', logACEvent, false);
+appCache.addEventListener('checking', logACEvent, false);
+appCache.addEventListener('noupdate', logACEvent, false);
+appCache.addEventListener('downloading', logACEvent, false);
+appCache.addEventListener('progress', logACEvent, false);
+appCache.addEventListener('updateready', logACEvent, false);
+appCache.addEventListener('cached', logACEvent, false);
+</script>
+</head>
+
+<body>
+
+AppContainer Status on page load: <span id="spanACStatus">-</span>
 <p>
-Video courtesy of 
-<a href="https://www.bigbuckbunny.org/" target="_blank">Big Buck Bunny</a>.
+<button type="button" onclick="updateCache();">Try appCache.Update()</button>
+<button type="button" onclick="addRandomImage();">Add Random Image</button>
 </p>
+<p>
+<hr />
+EventLog: <span id="spanEvents"></span>
 
-</body> 
+<table >
+<tr><td>Here's an image that will be <span class="auto-style1"><strong>stored in the AppCache</strong></span></td><td><img height="50" src="cached.aspx" /></td></tr>
+<tr><td>Here's an image to <span class="auto-style2"><strong>pull from the network</strong></span> only; (broken offline)</td><td><img height="50"  src="network.aspx" /></td> </tr>
+<tr><td>Here's an image to store and use if <span class="auto-style4"><strong>network is unreachable</strong></span></td><td><img height="50" src="fallback.aspx" /></td></tr>
+<tr><td>Here's an image not mentioned in manifest<span class="auto-style3"><strong>(fallback if offline)</strong></span></td><td><img height="50" src="generic.aspx" /></td></tr>
+</table>
+<ul>
+<li><a href="http://msdn.microsoft.com/en-US/library/ie/hh673545.aspx">MSDN Info on AppCache</a>
+<li><a href="http://blogs.msdn.com/b/ie/archive/2011/09/27/building-offline-experiences-with-html5-appcache-and-indexeddb.aspx">IEBlog Post</a>
+<li><a href="http://www.w3.org/TR/html5/browsers.html#concept-appcache-matches-fallback">Fallback</a></li>
+	<li><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=841937">Firefox 
+	bug #841937</a> -&gt; <a href="http://ericlawrence/com/test/appcache/IncorrectFirefoxBehavior.png">BadBehavior.png</a></li>
+</ul>
+</body>
+
 </html>
+
